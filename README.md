@@ -4,7 +4,7 @@
 
 ![P2Calib](./README/projection.png)
 
-<a href="https://arxiv.org/"><img src="https://img.shields.io/badge/arXiv-P%C2%B2Calib-b31b1b" alt="arXiv"></a><a href="./README/p2calib_gui.mp4"><img src="https://img.shields.io/badge/Video-Tool%20Demo-blue" alt="Demo"></a><a><img alt="PRs-Welcome" src="https://img.shields.io/badge/PRs-Welcome-white" /></a>[![GitHub Stars](https://img.shields.io/github/stars/JokerJohn/P2Calib.svg)](https://github.com/JokerJohn/P2Calib/stargazers)<a href="https://github.com/JokerJohn/P2Calib/network/members"><img alt="FORK" src="https://img.shields.io/github/forks/JokerJohn/P2Calib?color=white" /></a>[![GitHub Issues](https://img.shields.io/github/issues/JokerJohn/P2Calib.svg)](https://github.com/JokerJohn/P2Calib/issues)[![License](https://img.shields.io/badge/license-GPL--2.0-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+<a href="https://arxiv.org/"><img src="https://img.shields.io/badge/arXiv-P%C2%B2Calib-b31b1b" alt="arXiv"></a><a href="./README/p2calib_gui.mp4"><img src="https://img.shields.io/badge/Video-Tool%20Demo-blue" alt="Demo"></a><a><img alt="PRs-Welcome" src="https://img.shields.io/badge/PRs-Welcome-white" /></a>[![GitHub Stars](https://img.shields.io/github/stars/JokerJohn/P2Calib.svg)](https://github.com/JokerJohn/P2Calib/stargazers)<a href="https://github.com/JokerJohn/P2Calib/network/members"><img alt="FORK" src="https://img.shields.io/github/forks/JokerJohn/P2Calib?color=white" /></a>[![GitHub Issues](https://img.shields.io/github/issues/JokerJohn/P2Calib.svg)](https://github.com/JokerJohn/P2Calib/issues)[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 *Whole-scene projection with the extrinsic of each method, on four sensors. White circles: image hole centers; red crosses: projected LiDAR centers.*
 
@@ -134,7 +134,7 @@ In simulation the hole-center error falls from 6.8–14.7 mm to 1.6–3.9 mm acr
 
 > The calibration tool is being prepared for release. The commands below describe the released package.
 
-Requires Ubuntu 20.04/22.04, Python 3.10, Open3D 0.19, OpenCV 4.10, PySide6, NumPy < 2.
+P²Calib is implemented in Python. It requires Ubuntu 20.04/22.04, Python 3.10, Open3D 0.19, OpenCV 4.10, PySide6 and NumPy < 2.
 
 ```bash
 git clone https://github.com/JokerJohn/P2Calib.git
@@ -198,9 +198,13 @@ The board and the baseline pipeline follow FAST-Calib and velo2cam:
 }
 ```
 
+## License
+
+P²Calib is released under the [MIT license](./LICENSE). The pipeline follows the four-hole method of [FAST-Calib](https://github.com/hku-mars/FAST-Calib), but the code here is an independent Python implementation rather than a copy of that C++ codebase.
+
 ## Acknowledgment
 
-This work is built on [FAST-Calib](https://github.com/hku-mars/FAST-Calib), whose GPL-2.0 license it inherits and whose Avia and Mid-360 data we use, with the four-hole board design originating from [velo2cam_calibration](https://github.com/beltransen/velo2cam_calibration). We thank Shenzhen Fushi Technology Co., Ltd. for the area-array LiDAR, the platform and the FS datasets, and Shiyang Chen of X Square Robot for productive discussions.
+We thank the authors of [FAST-Calib](https://github.com/hku-mars/FAST-Calib), whose four-hole pipeline this work follows and whose Avia and Mid-360 data we use, and the authors of [velo2cam_calibration](https://github.com/beltransen/velo2cam_calibration), from which the board design originates. We thank Shenzhen Fushi Technology Co., Ltd. for the area-array LiDAR, the platform and the FS datasets, and Shiyang Chen of X Square Robot for productive discussions.
 
 ## Contributors
 
