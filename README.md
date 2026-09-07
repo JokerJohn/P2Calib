@@ -199,7 +199,11 @@ The board and the baseline pipeline follow FAST-Calib and velo2cam:
 
 ## Acknowledgment
 
-Built on [FAST-Calib](https://github.com/hku-mars/FAST-Calib), whose GPL-2.0 license this project inherits; the board design originates from [velo2cam_calibration](https://github.com/beltransen/velo2cam_calibration). Shenzhen Fushi Technology Co., Ltd. provided the area-array LiDAR and the FS datasets.
+- The pipeline is built on [FAST-Calib](https://github.com/hku-mars/FAST-Calib), whose GPL-2.0 license this project inherits, and which also provides the Avia and Mid-360 datasets used for the cross-sensor evaluation.
+- The four-hole board design originates from [velo2cam_calibration](https://github.com/beltransen/velo2cam_calibration), which also serves as one of our baselines.
+- Shenzhen Fushi Technology Co., Ltd. provided the area-array LiDAR, the mobile platform and the FS datasets.
+- Shiyang Chen of X Square Robot contributed productive discussions on the prior formulation.
+- The tool is built with [Open3D](https://github.com/isl-org/Open3D), [OpenCV](https://github.com/opencv/opencv) and [PySide6](https://doc.qt.io/qtforpython/).
 
 ## Contributors
 
