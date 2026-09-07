@@ -14,10 +14,11 @@
 
 **P²Calib** calibrates a LiDAR and a camera from the four-hole board. Accuracy in this pipeline is limited by the LiDAR-side hole centers, which degrade under sparse angular coverage and mixed pixels. P²Calib removes this bottleneck with two **pattern priors** that the board's CAD model already specifies:
 
-- **Radius prior** fixes the fitting radius to the CAD value, removing the center–radius degeneracy of short-arc circle fitting.
-- **Layout prior** projects the four centers onto the known rigid rectangle, reducing the per-capture unknowns from twelve to four.
-- **Results**: 90% / 82% lower joint residual and 96% / 77% lower held-out reprojection error on two real solid-state LiDAR datasets; 3.5–6.9× lower hole-center error in simulation.
-- **Cost**: 4.5–6.3 ms per cloud. No initial extrinsic guess required.
+- **Radius prior.** The known hole radius is incorporated as a fitting constraint, which prevents the center estimates from degrading under sparse angular coverage.
+- **Layout prior.** Building on the improved hole estimates, the rigid rectangular layout of the four holes is enforced as a global consistency constraint, which corrects the residual errors across holes.
+- **Interactive tool.** Both priors are integrated into a calibration tool that provides a complete extrinsic calibration pipeline.
+
+Experiments on simulated and real datasets show that P²Calib lowers the joint registration residual by 90% and 82% and the held-out reprojection error by 96% and 77% over the baseline.
 
 <div align="center">
 
@@ -65,9 +66,9 @@ The area-array LiDAR has a 120°×50° field of view, 0.33° resolution in both 
 
 </div>
 
-*Batch detection and joint solving: sample rail on the left; camera and point-cloud views on top with the ROI, fitted rings and hole centers overlaid; reprojection view and run log below; workflow checklist on the right. Full recording: [`p2calib_gui.mp4`](./README/p2calib_gui.mp4).*
+*Batch detection and joint solving: the scene list on the left; the camera and point-cloud views on top, with the region of interest, the fitted hole rings and the hole centers drawn on them; the reprojection view and the message log below. Full recording: [`p2calib_gui.mp4`](./README/p2calib_gui.mp4).*
 
-The workbench exposes every intermediate result, reports the layout disagreement and the registration residual separately for each capture, solves the included samples jointly, and exports the extrinsic, reprojection images, colored clouds and a run manifest.
+The tool shows the result of every intermediate step, reports the layout disagreement and the registration residual separately for each capture, solves the selected scenes jointly, and writes out the extrinsic, the reprojection images and the colored point clouds.
 
 ## Method
 
@@ -87,7 +88,7 @@ The workbench exposes every intermediate result, reports the layout disagreement
 
 *(**A**) A short arc (blue) permits many center–radius pairs (orange). (**B**) Sector samples constrain the center at radius r−δ; crosses mark rejected returns. (**C**) The CAD layout couples the four independent centers (orange) into the projected centers (red).*
 
-Boundary candidates are drawn from an annulus and reduced to one representative per azimuth sector, then each center is solved by Huber-weighted Gauss–Newton against the fixed radius, where a single bias δ absorbs the inward rim erosion. The four refined centers are finally projected onto the CAD rectangle. Both priors act only on the LiDAR branch, so P²Calib is a drop-in replacement for the extraction stage of any four-hole pipeline.
+Boundary candidates are drawn from an annulus and reduced to one representative per azimuth sector, then each center is solved by Huber-weighted Gauss–Newton against the fixed radius, where a single bias δ absorbs the inward rim erosion. The four refined centers are finally projected onto the CAD rectangle. Both priors act only on the LiDAR branch; the camera processing and the closed-form registration are unchanged, so the method applies to any four-hole calibration pipeline.
 
 ## Results
 
@@ -117,7 +118,7 @@ Joint residual [mm] and leave-one-out reprojection error [px], lower is better. 
 
 </div>
 
-*Joint residual (**left**) and LOO error (**right**) on Avia, two Mid-360 sessions and the two FS datasets. Gains are smaller on scanning LiDARs, which already cover the hole rims densely.*
+*Joint residual (**left**) and LOO error (**right**) on Avia, two Mid-360 sessions and the two FS datasets. The improvement is smaller on the scanning LiDARs, which sample the hole rims more densely.*
 
 In simulation the hole-center error falls from 6.8–14.7 mm to 1.6–3.9 mm across all standoff groups, and the LOO reprojection error from 2.61 to 0.40 px on single-frame clouds and from 1.51 to 0.23 px on accumulated clouds.
 
