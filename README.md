@@ -18,19 +18,10 @@
 - **Layout prior.** Building on the improved hole estimates, the rigid rectangular layout of the four holes is enforced as a global consistency constraint, which corrects the residual errors across holes.
 - **Interactive tool.** Both priors are integrated into a calibration tool that provides a complete extrinsic calibration pipeline.
 
-This is our core motivation: area-array solid-state LiDARs give especially noisy, sparse point clouds, so their hole boundaries are hard to fit well — the same problem shows up, to a smaller degree, on other LiDARs too. Below, the raw fit (dashed) drifts off the true board layout at both a near and a far range; P²Calib (solid) pulls it back.
-
-<div align="center">
-
-![Teaser](./README/teaser.png)
-
-</div>
-
 Experiments on simulated and real datasets show that P²Calib lowers the joint registration residual by 90% and 82% and the held-out reprojection error by 96% and 77% over the baseline.
-
 <div align="center">
 
-![Pipeline](./README/pipeline.png)
+![image-20260909233826911](./README/image-20260909233826911.png)
 
 </div>
 
@@ -40,11 +31,9 @@ Experiments on simulated and real datasets show that P²Calib lowers the joint r
 
 ## Hardware and Scenes
 
-<div align="center">
 
-![Setup](./README/setup.png)
-
-</div>
+| ![image-20260909233703627](./README/image-20260909233703627.png) | ![image-20260909233726197](./README/image-20260909233726197.png) |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
 
 <div align="center">
 
@@ -72,13 +61,8 @@ Click the image to play the full demo. The tool shows every step live, reports p
 
 ## Method
 
-<div align="center">
-
-![Priors](./README/priors.png)
-
-</div>
-
-Boundary candidates are drawn from an annulus and reduced to one representative per azimuth sector, then each center is solved by Huber-weighted Gauss–Newton against the fixed radius, where a single bias δ absorbs the inward rim erosion. The four refined centers are finally projected onto the CAD rectangle. Both priors act only on the LiDAR branch; the camera processing and the closed-form registration are unchanged, so the method applies to any four-hole calibration pipeline.
+| ![image-20260909233956055](./README/image-20260909233956055.png) | ![image-20260909234010024](./README/image-20260909234010024.png) |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
 
 **Radius prior.** Each hole's radius is pinned to the known value `r − δ` instead of left free. That removes the center/radius trade-off in panel A above — with the radius fixed, a short arc can no longer be explained away by shrinking the circle instead of moving the center:
 
@@ -90,7 +74,7 @@ $$
 
 </div>
 
-**Why this helps: fewer unknowns per hole.** A free circle has 3 unknowns (center + radius), so four holes carry 12. The radius prior drops that to 4 × 2 + 1 = 9 by sharing one bias δ across holes; the layout prior below then collapses all eight center coordinates to the rectangle's 3 pose parameters, for 3 + 1 = 4 total. Same number of boundary points, far fewer parameters to explain them with — that's what makes the fit well-posed again on sparse data:
+> A free circle has 3 unknowns (center + radius), so four holes carry 12. The radius prior drops that to 4 × 2 + 1 = 9 by sharing one bias δ across holes; the layout prior below then collapses all eight center coordinates to the rectangle's 3 pose parameters, for 3 + 1 = 4 total. Same number of boundary points, far fewer parameters to explain them with — that's what makes the fit well-posed again on sparse data:
 
 <div align="center">
 
@@ -110,42 +94,22 @@ $$
 
 </div>
 
+
+
 ## Results
 
-<div align="center">
 
-| Method | FS-B Det. | Joint | LOO | FS-C Det. | Joint | LOO |
-| ------ | --------: | ----: | --: | --------: | ----: | --: |
-| velo2cam¹ | 14/18 | 23.50 | 3.51 | 11/20 | 40.55 | 10.25 |
-| FAST-Calib | 85/90 | 217.68 | 67.50 | 65/100 | 191.50 | 43.34 |
-| Ours w/o LP | 90/90 | 24.02 | 3.35 | 85/100 | 36.82 | 10.61 |
-| Ours w/o RP | 80/90 | **22.23** | 2.87 | 60/100 | 35.92 | **9.67** |
-| **P²Calib** | 80/90 | 22.28 | **2.82** | 60/100 | **35.13** | 9.91 |
+| ![image-20260909234147176](./README/image-20260909234147176.png) | ![image-20260909234201713](./README/image-20260909234201713.png) |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ![image-20260909234743380](./README/image-20260909234743380.png) | ![image-20260909234801533](./README/image-20260909234801533.png) |
 
-</div>
+| ![Sweeps](./README/sweeps.png)                               |
+| ------------------------------------------------------------ |
+| ![image-20260909234428812](./README/image-20260909234428812.png) |
 
-Joint residual [mm] and leave-one-out reprojection error [px], lower is better. `Det.` counts successful extractions over five seeds; errors use the scenes every variant detects. ¹ velo2cam is scored on its own detected scenes, after adapting its input stage to solid-state clouds.
 
-<div align="center">
-<table>
-<tr>
-<td width="50%"><img src="./README/ablation_vis.png" width="100%"></td>
-<td width="50%"><img src="./README/sensors.png" width="100%"></td>
-</tr>
-</table>
-</div>
-
-In simulation the hole-center error falls from 6.8–14.7 mm to 1.6–3.9 mm across all standoff groups, and the LOO reprojection error from 2.61 to 0.40 px on single-frame clouds and from 1.51 to 0.23 px on accumulated clouds.
-
-<div align="center">
-
-![Sweeps](./README/sweeps.png)
-
-</div>
 
 ## Getting Started
-
-> The calibration tool isn't released yet — the steps below show what setup and usage will look like once it is.
 
 P²Calib is implemented in Python, for Ubuntu 20.04/22.04, Python 3.10, Open3D 0.19, OpenCV 4.10, PySide6 and NumPy < 2.
 
@@ -156,18 +120,8 @@ scripts/setup_p2calib_env.sh     # conda environment
 scripts/run_p2calib_gui.sh       # launch the workbench
 ```
 
-Each sample is one image paired with one point cloud, no rosbag needed. Open a dataset, draw the LiDAR ROI once per scene, run `Detect Selected`, then `Optimize Included` for the multi-scene solve and `Export Result`. The two priors are independent switches, which reproduces every variant in the results table above:
+Each sample is one image paired with one point cloud. Open a dataset, draw the LiDAR ROI once per scene, run `Detect Selected`, then `Optimize Included` for the multi-scene solve and `Export Result`. The two priors are independent switches, which reproduces every variant in the results table above:
 
-<div align="center">
-
-| `use_circle_prior` | `use_rect_template` | Variant |
-| --- | --- | --- |
-| `false` | `false` | FAST-Calib baseline |
-| `true` | `false` | Ours w/o LP |
-| `false` | `true` | Ours w/o RP |
-| `true` | `true` | **P²Calib** |
-
-</div>
 
 ## TODO
 
@@ -184,8 +138,6 @@ Each sample is one image paired with one point cloud, no rosbag needed. Open a d
   author        = {Hu, Xiangcheng},
   journal       = {arXiv preprint arXiv:2609.07516},
   eprint        = {2609.07516},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.RO},
   year          = {2026}
 }
 ```
@@ -198,7 +150,7 @@ P²Calib is released under the [MIT license](./LICENSE).
 
 ## Acknowledgment
 
-Thanks to the authors of [FAST-Calib](https://github.com/hku-mars/FAST-Calib) and [velo2cam_calibration](https://github.com/beltransen/velo2cam_calibration), whose board and pipeline this work builds on; to Shenzhen Foreseen Technology for the area-array LiDAR, platform and FS datasets; and to Shiyang Chen of X Square Robot for helpful discussions.
+We thank the [FAST-Calib](https://github.com/hku-mars/FAST-Calib) and [velo2cam_calibration](https://github.com/beltransen/velo2cam_calibration), whose board and pipeline this work builds on; to Shenzhen Foreseen Technology for the area-array LiDAR, platform and FS datasets; and to Shiyang Chen of X Square Robot for insightful discussions.
 
 ## Contributors
 
