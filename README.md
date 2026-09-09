@@ -2,7 +2,7 @@
 
 <h1>P²Calib: Utilizing Pattern Priors for LiDAR–Camera Extrinsic Calibration</h1>
 
-<p><a href="https://github.com/JokerJohn"><b>Xiangcheng Hu</b></a> &nbsp;(Sole Author)</p>
+<p><a href="https://github.com/JokerJohn"><b>Xiangcheng Hu</b></a></p>
 
 ![P2Calib](./README/projection.png)
 
@@ -17,6 +17,14 @@
 - **Radius prior.** The known hole radius is incorporated as a fitting constraint, which prevents the center estimates from degrading under sparse angular coverage.
 - **Layout prior.** Building on the improved hole estimates, the rigid rectangular layout of the four holes is enforced as a global consistency constraint, which corrects the residual errors across holes.
 - **Interactive tool.** Both priors are integrated into a calibration tool that provides a complete extrinsic calibration pipeline.
+
+This is our core motivation: area-array solid-state LiDARs give especially noisy, sparse point clouds, so their hole boundaries are hard to fit well — the same problem shows up, to a smaller degree, on other LiDARs too. Below, the raw fit (dashed) drifts off the true board layout at both a near and a far range; P²Calib (solid) pulls it back.
+
+<div align="center">
+
+![Teaser](./README/teaser.png)
+
+</div>
 
 Experiments on simulated and real datasets show that P²Calib lowers the joint registration residual by 90% and 82% and the held-out reprojection error by 96% and 77% over the baseline.
 
@@ -33,17 +41,12 @@ Experiments on simulated and real datasets show that P²Calib lowers the joint r
 ## Hardware and Scenes
 
 <div align="center">
-<table>
-<tr>
-<td width="50%"><img src="./README/platform.png" width="100%"></td>
-<td width="50%"><img src="./README/scenes.png" width="100%"></td>
-</tr>
-<tr>
-<td valign="top"><sub>Mobile platform and calibration board, with the camera and the area-array LiDAR enlarged.</sub></td>
-<td valign="top"><sub>One data source per column, camera image (<b>a–d</b>) above the range-shaded LiDAR scan (<b>A–D</b>), the holes appearing as white voids: (<b>a,A</b>) simulator, (<b>b,B</b>) Avia, (<b>c,C</b>) Mid-360, (<b>d,D</b>) the area-array FS sensor.</sub></td>
-</tr>
-</table>
+
+![Setup](./README/setup.png)
+
 </div>
+
+<div align="center">
 
 | Dataset | Sensor | Scenes | Standoff |
 | ------- | ------ | -----: | -------- |
@@ -52,6 +55,8 @@ Experiments on simulated and real datasets show that P²Calib lowers the joint r
 | `Avia` | Livox Avia | 5 | — |
 | `Mid-360 A / B` | Livox Mid-360 | 4 / 3 | — |
 | `Simulated` | four-hole board simulator | 60 × 2 densities | 1.5–5.0 m |
+
+</div>
 
 The area-array LiDAR has a 120°×50° field of view, 0.33° resolution in both axes, and ±50 mm range noise. `Avia` and `Mid-360` come from [FAST-Calib](https://github.com/hku-mars/FAST-Calib). Download links will be added on release.
 
@@ -63,38 +68,51 @@ The area-array LiDAR has a 120°×50° field of view, 0.33° resolution in both 
 
 </div>
 
-*Batch detection and joint solving: the scene list on the left; the camera and point-cloud views on top, with the region of interest, the fitted hole rings and the hole centers drawn on them; the reprojection view and the message log below. Click the image above to play the full recording.*
-
-The tool shows the result of every intermediate step, reports the layout disagreement and the registration residual separately for each capture, solves the selected scenes jointly, and writes out the extrinsic, the reprojection images and the colored point clouds.
+Click the image to play the full demo. The tool shows every step live, reports per-scene residuals, solves the selected scenes jointly, and exports the extrinsic, reprojection images and colored point clouds.
 
 ## Method
 
 <div align="center">
-<table>
-<tr>
-<td width="50%"><img src="./README/teaser.png" width="100%"></td>
-<td width="50%"><img src="./README/priors.png" width="100%"></td>
-</tr>
-<tr>
-<td valign="top"><sub>Hole extraction without the priors, at 1.0 m (left) and 4.0 m (right), in the board plane. Mixed pixels (violet) and sparse boundary sampling (orange) displace the baseline centers (dashed) from the CAD rectangle, which P²Calib (solid) recovers.</sub></td>
-<td valign="top"><sub>(<b>A</b>) A short arc (blue) permits many center–radius pairs (orange). (<b>B</b>) Sector samples constrain the center at radius r−δ; crosses mark rejected returns. (<b>C</b>) The CAD layout couples the four independent centers (orange) into the projected centers (red).</sub></td>
-</tr>
-</table>
+
+![Priors](./README/priors.png)
+
 </div>
 
 Boundary candidates are drawn from an annulus and reduced to one representative per azimuth sector, then each center is solved by Huber-weighted Gauss–Newton against the fixed radius, where a single bias δ absorbs the inward rim erosion. The four refined centers are finally projected onto the CAD rectangle. Both priors act only on the LiDAR branch; the camera processing and the closed-form registration are unchanged, so the method applies to any four-hole calibration pipeline.
 
-**Radius prior.** Instead of letting each hole's radius float, it's pinned to the known value `r − δ`. That's what removes the center/radius trade-off shown in panel A above — with the radius fixed, a short arc can no longer be explained by shrinking the circle instead of moving the center:
+**Radius prior.** Each hole's radius is pinned to the known value `r − δ` instead of left free. That removes the center/radius trade-off in panel A above — with the radius fixed, a short arc can no longer be explained away by shrinking the circle instead of moving the center:
 
-$$e_{ik} = d_{ik} - (r - \delta)$$
+<div align="center">
 
-**Layout prior.** The four centers found this way are then snapped onto a single rigid rotation and translation of the CAD rectangle, so one noisy hole gets pulled back into line by the other three instead of being trusted on its own:
+$$
+e_{ik} = d_{ik} - (r - \delta)
+$$
 
-$$(\theta^\star, t^\star) = \arg\min_{\theta,\ t} \sum_{k=1}^{4} \left\| \hat{c}_k - R(\theta)\,c^{\mathcal{B}}_k - t \right\|^2$$
+</div>
+
+**Why this helps: fewer unknowns per hole.** A free circle has 3 unknowns (center + radius), so four holes carry 12. The radius prior drops that to 4 × 2 + 1 = 9 by sharing one bias δ across holes; the layout prior below then collapses all eight center coordinates to the rectangle's 3 pose parameters, for 3 + 1 = 4 total. Same number of boundary points, far fewer parameters to explain them with — that's what makes the fit well-posed again on sparse data:
+
+<div align="center">
+
+$$
+\underbrace{4 \times 3}_{12} \ \xrightarrow{\text{radius prior}}\ \underbrace{4 \times 2 + 1}_{9} \ \xrightarrow{\text{layout prior}}\ \underbrace{3 + 1}_{4}
+$$
+
+</div>
+
+**Layout prior.** The four centers found this way are then snapped onto one rigid rotation and translation of the CAD rectangle, so a noisy hole gets pulled back into line by the other three instead of being trusted on its own:
+
+<div align="center">
+
+$$
+(\theta^\star, t^\star) = \arg\min_{\theta,\ t} \sum_{k=1}^{4} \left\| \hat{c}_k - R(\theta)\,c^{\mathcal{B}}_k - t \right\|^2
+$$
+
+</div>
 
 ## Results
 
-Joint residual [mm] and leave-one-out reprojection error [px], lower is better. `Det.` counts successful extractions over five seeds; errors use the scenes every variant detects.
+<div align="center">
 
 | Method | FS-B Det. | Joint | LOO | FS-C Det. | Joint | LOO |
 | ------ | --------: | ----: | --: | --------: | ----: | --: |
@@ -104,17 +122,15 @@ Joint residual [mm] and leave-one-out reprojection error [px], lower is better. 
 | Ours w/o RP | 80/90 | **22.23** | 2.87 | 60/100 | 35.92 | **9.67** |
 | **P²Calib** | 80/90 | 22.28 | **2.82** | 60/100 | **35.13** | 9.91 |
 
-¹ On its own detected scenes, after adapting its input stage to solid-state clouds.
+</div>
+
+Joint residual [mm] and leave-one-out reprojection error [px], lower is better. `Det.` counts successful extractions over five seeds; errors use the scenes every variant detects. ¹ velo2cam is scored on its own detected scenes, after adapting its input stage to solid-state clouds.
 
 <div align="center">
 <table>
 <tr>
 <td width="50%"><img src="./README/ablation_vis.png" width="100%"></td>
 <td width="50%"><img src="./README/sensors.png" width="100%"></td>
-</tr>
-<tr>
-<td valign="top"><sub>Real-scene ablation on FS-B. (<b>A</b>) Camera detections; (<b>B</b>) both priors off, the fitted radii vary across holes; (<b>C</b>) radius prior only, the centers form a skewed quadrilateral; (<b>D</b>) both priors, the centers conform to the rectangular layout.</sub></td>
-<td valign="top"><sub>Joint residual (<b>left</b>) and LOO error (<b>right</b>) on Avia, two Mid-360 sessions and the two FS datasets. The improvement is smaller on the scanning LiDARs, which sample the hole rims more densely.</sub></td>
 </tr>
 </table>
 </div>
@@ -126,8 +142,6 @@ In simulation the hole-center error falls from 6.8–14.7 mm to 1.6–3.9 mm acr
 ![Sweeps](./README/sweeps.png)
 
 </div>
-
-*Hole-center error against (**A**) standoff distance, (**B**) board placement in the image and (**C**) range-noise σ, on a shared logarithmic scale; AC solid, SF dashed. A curve ends where the method recovers no board.*
 
 ## Getting Started
 
@@ -144,12 +158,16 @@ scripts/run_p2calib_gui.sh       # launch the workbench
 
 Each sample is one image paired with one point cloud, no rosbag needed. Open a dataset, draw the LiDAR ROI once per scene, run `Detect Selected`, then `Optimize Included` for the multi-scene solve and `Export Result`. The two priors are independent switches, which reproduces every variant in the results table above:
 
+<div align="center">
+
 | `use_circle_prior` | `use_rect_template` | Variant |
 | --- | --- | --- |
 | `false` | `false` | FAST-Calib baseline |
 | `true` | `false` | Ours w/o LP |
 | `false` | `true` | Ours w/o RP |
 | `true` | `true` | **P²Calib** |
+
+</div>
 
 ## TODO
 
@@ -172,24 +190,7 @@ Each sample is one image paired with one point cloud, no rosbag needed. Open a d
 }
 ```
 
-The board and the baseline pipeline follow FAST-Calib and velo2cam:
-
-```bibtex
-@article{zheng2026fastcalib,
-  title   = {{FAST-Calib}: {LiDAR}-Camera Extrinsic Calibration in One Second},
-  author  = {Zheng, Chunran and Zhang, Fu},
-  journal = {IEEE Robotics and Automation Practice},
-  volume  = {1}, pages = {108--112}, year = {2026},
-  doi     = {10.1109/RAP.2026.3692446}
-}
-
-@article{beltran2022automatic,
-  title   = {Automatic Extrinsic Calibration Method for LiDAR and Camera Sensor Setups},
-  author  = {Beltr{\'a}n, Jorge and Guindel, Carlos and de la Escalera, Arturo and Garc{\'i}a, Fernando},
-  journal = {IEEE Transactions on Intelligent Transportation Systems},
-  volume  = {23}, number = {10}, pages = {17677--17689}, year = {2022}
-}
-```
+The board and the baseline pipeline follow [FAST-Calib](https://github.com/hku-mars/FAST-Calib) and [velo2cam_calibration](https://github.com/beltransen/velo2cam_calibration).
 
 ## License
 
@@ -197,7 +198,7 @@ P²Calib is released under the [MIT license](./LICENSE).
 
 ## Acknowledgment
 
-We thank the authors of [FAST-Calib](https://github.com/hku-mars/FAST-Calib), whose four-hole pipeline this work follows and whose Avia and Mid-360 data we use, and the authors of [velo2cam_calibration](https://github.com/beltransen/velo2cam_calibration), from which the board design originates. We thank Shenzhen Foreseen Technology Co., Ltd. for the area-array LiDAR, the platform and the FS datasets, and Shiyang Chen of X Square Robot for productive discussions.
+Thanks to the authors of [FAST-Calib](https://github.com/hku-mars/FAST-Calib) and [velo2cam_calibration](https://github.com/beltransen/velo2cam_calibration), whose board and pipeline this work builds on; to Shenzhen Foreseen Technology for the area-array LiDAR, platform and FS datasets; and to Shiyang Chen of X Square Robot for helpful discussions.
 
 ## Contributors
 
